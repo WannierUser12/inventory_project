@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет склада</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Учет склада</h1>
+    <table id="inventoryTable">
+        <thead>
+            <tr>
+                <th>Наименование</th>
+                <th>Описание</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Управление</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryBody">
+            <!-- Строки с товарами будут добавляться здесь -->
+        </tbody>
+    </table>
+    <br>
+    <button onclick="addProduct()">Добавить товар</button>
+    
+    <script>
+        function addProduct() {
+            var tableBody = document.getElementById("inventoryBody");
+            var newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td><button onclick="removeProduct(this)">Удалить</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function removeProduct(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    </script>
+</body>
+</html>

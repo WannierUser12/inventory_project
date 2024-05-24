@@ -1,0 +1,498 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Склад</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f3f3;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .input-field {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            width: 150px; /* Учитываем отступы для скроллбара */
+        }
+
+        .datalist {
+            display: none; /* Скрываем по умолчанию */
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 1;
+            max-height: 5px; /* Максимальная высота списка, если нужно */
+        }
+       .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+        }
+        .notificationfail {
+            transition: opacity 5s ease-in-out;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff0000;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            display: block;
+        }
+        .notificationfail.show {
+            display: block;
+        }
+
+
+        .input-field:focus + .datalist {
+            display: block;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .btn, .logout-btn {
+            padding: 8px 15px;
+            background-color: #4caf50;
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .btn:hover, .logout-btn:hover {
+            background-color: #45a049;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        button {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        select {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+                background-color: #45a049;
+            }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+
+        .search {
+            margin-bottom: 20px;
+        }
+        .user-info {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-info span {
+                margin-right: 15px;
+                font-weight: bold;
+            }
+        #shipment-info {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div id="notification" class="notification"></div>
+    <div id="notificationfail" class="notificationfail"></div>
+    <div class="container">
+
+        <div class="user-info">
+            <span>{{ user.first_name }} </span>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+
+        <h1>Склад</h1>
+
+        <form id="yourForm" onsubmit="event.preventDefault(); submitForm();" method="post">
+            {% csrf_token %}
+            <!--<label for="browser">Наименование товара:</label>-->
+            <!--<label for="lname">Количество:</label><br>-->
+            <!--<label for="lname">Описание:</label><br>-->
+            <input list="browsers" name="name" id="browser" class="input-field" placeholder="Наименование">
+            <datalist id="browsers" class="datalist"></datalist>
+            <input type="text" id="lname" name="quantity" placeholder="Количество">
+            <!--<label for="lname">Описание:</label><br>-->
+            <input type="text" id="lname" name="category" placeholder="Категория">
+            <button type="submit">Добавить</button>
+        </form>
+        <p><a href="../../index_arrival" class="btn">Список отгрузок и приходов</a></p>
+        <select id="categoryFilter" onchange="filterByCategory()">
+            <option value="">Все категории</option>
+            <!-- Добавьте другие категории по вашему выбору -->
+        </select>
+        <div class="search">
+            <!--<label for="myInput">Поиск:</label>-->
+            <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Введите наименование" title="Поиск">
+        </div>
+
+        <table id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Описание</th>
+                    <th>Количество</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryBody">
+                <!-- Здесь будут отображаться товары -->
+            </tbody>
+        </table>
+        <div id="shipment-info"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('yourForm'); // Замените 'yourForm' на ID вашей формы
+            var userIsManager = {{ user_is_manager|yesno:"true,false" }};
+        
+        if (userIsManager) {
+            form.style.display = 'none'; // Скрыть форму, если пользователь является менеджером
+        } else {
+            form.style.display = 'block'; // Показать форму для всех остальных пользователей
+        }
+        });
+
+        function dropdownmenu(products) {
+            var datalist = document.getElementById("browsers");
+            datalist.innerHTML = ""; // Clear previous options
+
+            if (Array.isArray(products) && products.length > 0) {
+                products.forEach(function (product) {
+                    var option = document.createElement("option");
+                    option.value = product.name;
+                    datalist.appendChild(option);
+                });
+            } else {
+                var messageOption = document.createElement("option");
+                messageOption.text = "Данные о товарах не найдены";
+                datalist.appendChild(messageOption);
+            }
+        }
+
+        function loadProductsByDates() {
+            var startDate = document.getElementById("start_date").value;
+            var endDate = document.getElementById("end_date").value;
+
+            fetch(`/api/products/?start_date=${startDate}&end_date=${endDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Проверяем, что получен корректный JSON
+                    displayProducts(data); // Отображаем полученные данные
+                })
+                .catch(error => console.error('Ошибка при загрузке данных:', error));
+        }
+
+        function myFunction() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("myInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("inventoryTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                var found = false;
+                for (var j = 0; j < 3; j++) { // Перебираем первые три столбца (наименование, описание, количество)
+                    td = tr[i].getElementsByTagName("td")[j];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+
+        function loadProducts() {
+            fetch('/api/inventorys/')
+                .then(response => response.json())
+                .then(data => {
+                    dropdownmenu(data);
+                    loadCategories(data);
+                    displayProducts(data);
+                })
+                .catch(error => console.error('Ошибка при загрузке данных:', error));
+        }
+
+
+        function showShipmentInfo(event, productName) {
+            fetch('/api/shipping/')
+                .then(response => response.json())
+                .then(data => {
+                    var shipments = data.filter(shipment => shipment.name === productName);
+                    var lastMonth = new Date();
+                    lastMonth.setMonth(lastMonth.getMonth() - 1);
+                    var lastWeek = new Date();
+                    lastWeek.setDate(lastWeek.getDate() - 7);
+
+                    var monthShipments = shipments.filter(shipment => new Date(shipment.date) >= lastMonth);
+                    var weekShipments = shipments.filter(shipment => new Date(shipment.date) >= lastWeek);
+
+                    var shipmentInfo = document.getElementById("shipment-info");
+                    shipmentInfo.innerHTML = "<b>Отгрузки за последний месяц:</b><br>";
+                    monthShipments.forEach(function (shipment) {
+                        shipmentInfo.innerHTML += `Получатель: ${shipment.reciever}, Дата: ${shipment.date}, Количество: ${shipment.quantity}<br>`;
+                    });
+                    shipmentInfo.innerHTML += "<b>Отгрузки за последнюю неделю:</b><br>";
+                    weekShipments.forEach(function (shipment) {
+                        shipmentInfo.innerHTML += `Получатель: ${shipment.reciever}, Дата: ${shipment.date}, Количество: ${shipment.quantity}<br>`;
+                    });
+
+                    shipmentInfo.style.display = 'block';
+                    shipmentInfo.style.top = (event.clientY + window.scrollY + 10) + 'px';
+                    shipmentInfo.style.left = (event.clientX + window.scrollX + 10) + 'px';
+                })
+                .catch(error => console.error('Ошибка при загрузке данных об отгрузках:', error));
+        }
+
+        function hideShipmentInfo() {
+            var shipmentInfo = document.getElementById("shipment-info");
+            shipmentInfo.style.display = 'none';
+        }
+
+        const categoryOrder = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее"];
+
+        function displayProducts(products) {
+            var tableBody = document.getElementById("inventoryBody");
+            var selectedCategory = document.getElementById("categoryFilter").value;
+            tableBody.innerHTML = "";
+
+            if (selectedCategory === "") {
+                // Сортировка по категориям, затем по имени
+                products.sort((a, b) => {
+                    let categoryComparison = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+                    if (categoryComparison === 0) {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return categoryComparison;
+                });
+            } else {
+                products.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            if (Array.isArray(products) && products.length > 0) {
+                products.forEach(function (product) {
+                    if (product.quantity > -500) {
+                        var row = document.createElement("tr");
+                        row.innerHTML = `
+                    <td onmouseover="showShipmentInfo(event, '${product.name}')" onmouseout="hideShipmentInfo()">${product.name}</td>
+                    <td>${product.description}</td>
+                    <td>${product.quantity}</td>
+                `;
+                        tableBody.appendChild(row);
+                    }
+                });
+            } else {
+                var messageRow = "<tr><td colspan='4'>Данные о товарах не найдены</td></tr>";
+                tableBody.innerHTML = messageRow;
+            }
+        }
+
+        function submitForm() {
+            var form = document.getElementById("yourForm"); // Замените "yourForm" на ID вашей формы
+            var formData = new FormData(form);
+
+            fetch("/api/inventorys/", {
+                method: "POST",
+                body: formData
+            })
+
+            .then(response => {
+                if (response.ok) {
+                    showNotification("Товар успешно добавлен");
+                    console.log(response);
+                    loadProducts();
+                    form.reset(); // Очистить форму после успешной отправки
+                } else {
+                    showNotificationfail("Ошибка добавления товара");
+                    //throw new Error("Ошибка при добавлении товара");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+
+
+        function loadCategories(products) {
+            var categoryFilter = document.getElementById("categoryFilter");
+
+            // Создаем множество для хранения уникальных категорий
+            var uniqueCategories = new Set();
+
+            // Итерируем по товарам и добавляем категории во множество
+            products.forEach(function (product) {
+                if (product.category) {
+                    uniqueCategories.add(product.category);
+                }
+            });
+
+            // Преобразуем множество в массив и сортируем категории
+            var sortedCategories = Array.from(uniqueCategories).sort();
+
+            // Очищаем текущие опции в выпадающем списке
+            categoryFilter.innerHTML = "";
+
+            // Добавляем опцию "Все категории"
+            var allOption = document.createElement("option");
+            allOption.value = "";
+            allOption.textContent = "Все категории";
+            categoryFilter.appendChild(allOption);
+
+            // Добавляем опции для каждой категории
+            sortedCategories.forEach(function (category) {
+                var option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+  
+        function filterByCategory() {
+            var selectedCategory = document.getElementById("categoryFilter").value;
+            //console.log(selectedCategory);
+            fetch('/api/inventorys/')
+                .then(response => response.json())
+                .then(data => {
+                    let filteredProducts = data.filter(product => {
+                        return selectedCategory === "" || product.category === selectedCategory;
+                    });
+                    //console.log(filteredProducts);
+                    
+                    displayProducts(filteredProducts);
+                    //console.log(filteredProducts);
+                })
+                .catch(error => console.error('Ошибка при загрузке данных:', error));
+        }
+
+
+        function showNotification(message) {
+            var notification = document.getElementById("notification");
+            notification.innerHTML = message;
+            notification.classList.add("show");
+            setTimeout(function () {
+                notification.classList.remove("show");
+            }, 3000); // Скрыть уведомление через 3 секунды (или другой необходимый интервал)
+        }
+
+        function showNotificationfail(message) {
+            var notificationfail = document.getElementById("notificationfail");
+            notificationfail.innerHTML = message;
+            notificationfail.classList.add("show");
+            setTimeout(function () {
+                notificationfail.classList.remove("show");
+            }, 3000); // Скрыть уведомление через 3 секунды (или другой необходимый интервал)
+        }
+
+        function logout() {
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login/';
+                } else {
+                    showNotificationfail("Ошибка при выходе из системы");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>

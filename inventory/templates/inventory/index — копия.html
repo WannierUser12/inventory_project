@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Складское приложение</title>
+</head>
+
+
+
+
+<body>
+    <h2>Добавление товара</h2>
+    <form action="api/add_product/" method="post">
+        {% csrf_token %}
+        <label for="browser">Выберите наименование товара:</label><br>
+        <input list="browsers" name="browser" id="browser"><br>
+        <datalist id="browsers"></datalist>
+        <label for="lname" href="http://google.com">Количество:</label><br>
+        <input type="text" id="lname" name="lname" value=""><br>
+        <button type="submit">Записать</button>
+    </form>
+
+
+
+
+<h1> Складское приложение</h1>
+<style>
+    table,
+    th,
+    td {
+        padding: 4px;
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+</style>
+<input type="text" id="myInput"
+       onkeyup="myFunction()"
+       placeholder="Поиск..."
+       title="Введите имя">
+
+<table id="inventoryTable">
+    <thead>
+        <tr>
+            <th>Наименование</th>
+            <th>Описание</th>
+            <th>Количество</th>
+            <th>Цена</th>
+        </tr>
+    </thead>
+    <tbody id="inventoryBody">
+        <!-- Здесь будут отображаться товары -->
+    </tbody>
+</table>
+
+
+<!-- Ваш текущий HTML код здесь -->
+
+<label for="start_date">Начальная дата:</label>
+<input type="date" id="start_date">
+
+<label for="end_date">Конечная дата:</label>
+<input type="date" id="end_date">
+
+<button onclick="loadProductsByDates()">Показать товары</button>
+
+<!-- Ваш текущий JavaScript код здесь -->
+
+
+
+<script>
+
+    function dropdownmenu(products) {
+        var datalist = document.getElementById("browsers");
+        datalist.innerHTML = ""; // Clear previous options
+
+        if (Array.isArray(products) && products.length > 0) {
+            products.forEach(function (product) {
+                var option = document.createElement("option");
+                option.value = product.name;
+                datalist.appendChild(option);
+            });
+        } else {
+            var messageOption = document.createElement("option");
+            messageOption.text = "Данные о товарах не найдены";
+            datalist.appendChild(messageOption);
+        }
+    }
+
+    
+    function loadProductsByDates() {
+        var startDate = document.getElementById("start_date").value;
+        var endDate = document.getElementById("end_date").value;
+
+        fetch(`/api/products/?start_date=${startDate}&end_date=${endDate}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Проверяем, что получен корректный JSON
+                displayProducts(data); // Отображаем полученные данные
+            })
+            .catch(error => console.error('Ошибка при загрузке данных:', error));
+    }
+
+    function myFunction() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("inventoryTable")
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                }
+                else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function loadProducts() {
+        fetch('/api/products/')
+            .then(response => response.json())
+            .then(data => {
+                dropdownmenu(data);
+                //console.log(data);
+                displayProducts(data);
+                // Отображаем полученные данные
+            })
+            .catch(error => console.error('Ошибка при загрузке данных:', error));
+ 
+        return products;
+        
+    }
+
+    function displayProducts(products) {
+        var tableBody = document.getElementById("inventoryBody");
+        tableBody.innerHTML = "";
+
+        // Проверяем, что products - это массив и он не пустой
+        if (Array.isArray(products) && products.length > 0) {
+            products.forEach(function (product) {
+                var row = "<tr>" +
+                    "<td>" + product.name + "</td>" +
+                    "<td>" + product.description + "</td>" +
+                    "<td>" + product.quantity + "</td>" +
+                    "<td>" + product.price + "</td>" +
+                    "</tr>";
+                tableBody.innerHTML += row;
+            });
+        } else {
+            var messageRow = "<tr><td colspan='4'>Данные о товарах не найдены</td></tr>";
+            tableBody.innerHTML = messageRow;
+        }
+    }
+
+    loadProducts();
+
+
+</script>
+</body>
+</html>
