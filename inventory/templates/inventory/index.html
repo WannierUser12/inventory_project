@@ -132,6 +132,16 @@
                 background-color: #45a049;
             }
         
+        #clockButton {
+            top:50px;
+            left:435px;
+            position: relative; 
+            background-color: rgba(69, 160, 73, 0.84);
+            color: #fff;
+            padding: 6px;
+            cursor: pointer;
+}
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -183,7 +193,6 @@
         </div>
 
         <h1>Склад</h1>
-
         <form id="yourForm" onsubmit="event.preventDefault(); submitForm();" method="post">
             {% csrf_token %}
             <!--<label for="browser">Наименование товара:</label>-->
@@ -196,14 +205,16 @@
             <input type="text" id="lname" name="category" placeholder="Категория">
             <button type="submit">Добавить</button>
         </form>
+        
         <p><a href="../../index_arrival" class="btn">Список отгрузок и приходов</a></p>
         <select id="categoryFilter" onchange="filterByCategory()">
             <option value="">Все категории</option>
             <!-- Добавьте другие категории по вашему выбору -->
         </select>
+        <button onclick="show_zero_products()" id="clockButton">Показать отсутствующие товары</button>
         <div class="search">
             <!--<label for="myInput">Поиск:</label>-->
-            <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Введите наименование" title="Поиск">
+            <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Поиск..." title="Поиск">
         </div>
 
         <table id="inventoryTable">
@@ -222,6 +233,8 @@
     </div>
 
     <script>
+        var flag = 1;
+        const categoryOrder = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее", "Примэкс"];
         document.addEventListener('DOMContentLoaded', function () {
             var form = document.getElementById('yourForm'); // Замените 'yourForm' на ID вашей формы
             var userIsManager = {{ user_is_manager|yesno:"true,false" }};
@@ -258,7 +271,31 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log(data); // Проверяем, что получен корректный JSON
-                    displayProducts(data); // Отображаем полученные данные
+                    displayProducts(data, flag); // Отображаем полученные данные
+                })
+                .catch(error => console.error('Ошибка при загрузке данных:', error));
+        }
+        function show_zero_products() {
+
+            if (flag==1) {
+                flag = 0;
+                but = document.getElementById('clockButton');
+                but.textContent =  "Скрыть отсутствущие товары";
+            } else {
+                flag = 1;
+                but = document.getElementById("clockButton");
+                but.textContent = "Показать отсутствущие товары";
+            }
+            
+            fetch('/api/inventorys/')
+                .then(response => response.json())
+                .then(data => {
+                    let products = data;
+                    //console.log(data);
+                    dropdownmenu(data);
+                    loadCategories(data);
+                    displayProducts(data, flag);
+                    // Отображаем полученные данные
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
         }
@@ -294,18 +331,19 @@
                     //console.log(data);
                     dropdownmenu(data);
                     loadCategories(data);
-                    displayProducts(data);
+                    displayProducts(data, flag);
                     // Отображаем полученные данные
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
         }
 
-        const categoryOrder = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее"]; 
-        function displayProducts(products) {
+        
+
+        function displayProducts(products, flag) {
             var tableBody = document.getElementById("inventoryBody");
             var selectedCategory = document.getElementById("categoryFilter").value;
             tableBody.innerHTML = "";
-            console.log(products);
+            //console.log(products);
 
             if (selectedCategory === "") {
                 // Сортировка по категориям, затем по имени
@@ -323,7 +361,7 @@
             //console.log(products);
             if (Array.isArray(products) && products.length > 0) {
                 products.forEach(function (product) {
-                    if (product.quantity > 0) {
+                    if (product.quantity >= flag) {
                         var row = "<tr>" +
                             "<td>" + product.name + "</td>" +
                             "<td>" + product.description + "</td>" +
@@ -340,7 +378,7 @@
         }
 
         function submitForm() {
-            var form = document.getElementById("yourForm"); // Замените "yourForm" на ID вашей формы
+            var form = document.getElementById("yourForm");
             var formData = new FormData(form);
 
             fetch("/api/inventorys/", {
@@ -378,11 +416,17 @@
 
             // Преобразуем множество в массив и сортируем категории
             var sortedCategories = Array.from(uniqueCategories).sort();
-
             // Очищаем текущие опции в выпадающем списке
             categoryFilter.innerHTML = "";
 
-            // Добавляем опцию "Все категории"
+            sortedCategories.sort((a, b) => {
+                let categoryComparison = categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
+                if (categoryComparison === 0) {
+                    return a.localeCompare(b);
+                }
+                return categoryComparison;
+            });
+
             var allOption = document.createElement("option");
             allOption.value = "";
             allOption.textContent = "Все категории";
@@ -408,7 +452,7 @@
                     });
                     //console.log(filteredProducts);
                     
-                    displayProducts(filteredProducts);
+                    displayProducts(filteredProducts, flag);
                     //console.log(filteredProducts);
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));

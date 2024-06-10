@@ -2,7 +2,7 @@ from rest_framework import serializers
 from inventory import models
 
 
-class InventorySerializer(serializers.HyperlinkedModelSerializer):
+class InventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Product
         fields = ['id', 'name', 'quantity', 'description', 'category']

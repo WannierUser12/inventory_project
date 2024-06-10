@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, generics, mixins
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsNotManager
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework import permissions
@@ -20,19 +21,39 @@ from rest_framework.test import APIRequestFactory
 
 from core.shortcuts import get_object_or_404
 from inventory.models import Product, product_arrival, product_shipment
-from inventory.serializers import ProductSerializer,ProductShipment, InventorySerializer
+from inventory.serializers import ProductSerializer, ProductShipment, InventorySerializer
 
 from datetime import datetime
+
 
 class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = InventorySerializer
     http_method_names = ['get', 'post', 'put']
 
-    def get_object(self):
-        queryset = self.get_queryset()
+    def list(self, request, *args, **kwargs):
+        if request.user.groups.filter(name='managers').exists():
+            filter_backends = [DjangoFilterBackend]
+            filterset_fields = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее"]
+            queryset = self.filter_queryset(self.get_queryset()).filter(category__in = filterset_fields)
+        else:
+            filterset_fields = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее", "Примэкс"]
+            queryset = self.filter_queryset(self.get_queryset()).filter(category__in = filterset_fields)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_object(self, request):
+        if request.user.IsNotManager():
+            queryset = self.get_queryset().filter(category='Резцы')
+        else:
+            queryset = self.get_queryset().filter(category='Ножи')
         print(queryset)
-        return get_object_or_404(queryset, pk = self.kwargs[self.lookup_field])
+        return get_object_or_404(queryset, pk=self.kwargs[self.lookup_field])
 
     def create(self, request, *args, **kwargs):
         if not IsNotManager().has_permission(request, self):
@@ -50,6 +71,7 @@ class InventoryViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 #Продукт
 class ProductViewSet(viewsets.ModelViewSet):
@@ -89,8 +111,8 @@ class ArrivalMixinView(viewsets.GenericViewSet,
 
         if product_name and product_quantity:
             try:
-                product_quantity = int(product_quantity)
                 product = Product.objects.filter(name=product_name).first()
+                product_quantity = int(product_quantity)
                 if product:
                     product.quantity += product_quantity
                     product.save()
@@ -114,27 +136,30 @@ class ArrivalMixinView(viewsets.GenericViewSet,
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         print(start_date, end_date)
-        try:
-            print("request_data", request.data)
-            if start_date and end_date:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
-                user = request.user
-                user_groups = user.groups.values_list('name', flat=True)
-                queryset = self.queryset.filter(date__range=[start_date, end_date])
-                serializer = self.serializer_class(queryset, many=True)
-                print(serializer.data)
-                if serializer.data:
-                    return Response(serializer.data)
-                else:
-                    return Response({"error": "Неверно указаны даты"}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if start_date:
+            try:
+                print("request_data", request.data)
+                if start_date and end_date:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    user = request.user
+                    user_groups = user.groups.values_list('name', flat=True)
+                    queryset = self.queryset.filter(date__range=[start_date, end_date])
+                    serializer = self.serializer_class(queryset, many=True)
+                    print(serializer.data)
+                    if serializer.data:
+                        return Response(serializer.data)
+                    else:
+                        return Response({"error": "Неверно указаны даты"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            self.get(request)
 
 
 class ShippingMixinView(viewsets.GenericViewSet,
-                       generics.ListCreateAPIView,
-                       mixins.RetrieveModelMixin):
+                        generics.ListCreateAPIView,
+                        mixins.RetrieveModelMixin):
     queryset = product_shipment.objects.all()
     serializer_class = ProductShipment
     print(queryset)
@@ -150,7 +175,7 @@ class ShippingMixinView(viewsets.GenericViewSet,
 
     def perform_create(self, serializer):
         if serializer.is_valid():
-             serializer.save()
+            serializer.save()
         product_name = serializer.validated_data.get("name")
         product_quantity = serializer.validated_data.get("quantity")
 
@@ -169,14 +194,15 @@ class ShippingMixinView(viewsets.GenericViewSet,
                 return Response({"error": "Invalid quantity value"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 def arrival(request):
     user_is_manager = request.user.groups.filter(name='managers').exists()
     return render(request, 'inventory/index_arrival.html', {'user_is_manager': user_is_manager})
 
+
 def index(request):
     user_is_manager = request.user.groups.filter(name='managers').exists()
     return render(request, 'inventory/index.html', {'user_is_manager': user_is_manager})
+
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, pk=product_id)

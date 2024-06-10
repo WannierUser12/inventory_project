@@ -251,8 +251,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var form = document.getElementById('yourForm'); // Замените 'yourForm' на ID вашей формы
-            var form2 = document.getElementById('yourFormShipping'); // Замените 'yourForm' на ID вашей формы
+            var form = document.getElementById('yourForm');
+            var form2 = document.getElementById('yourFormShipping');
             var header = document.getElementById('adding_product_header');
             var header2 = document.getElementById('shipping_product_header');
             var userIsManager = {{ user_is_manager|yesno:"true,false" }};
@@ -261,13 +261,13 @@
         if (userIsManager) {
             header.style.display = 'none';
             header2.style.display = 'none';
-            form.style.display = 'none'; // Скрыть форму, если пользователь является менеджером
-            form2.style.display = 'none'; // Скрыть форму, если пользователь является менеджером
+            form.style.display = 'none';
+            form2.style.display = 'none';
         } else {
-            header.style.display = 'block'; // Показать форму для всех остальных пользователей
+            header.style.display = 'block';
             header2.style.display = 'block';
-            form.style.display = 'block'; // Показать форму для всех остальных пользователей
-            form2.style.display = 'block'; // Показать форму для всех остальных пользователей
+            form.style.display = 'block';
+            form2.style.display = 'block';
         }
         
         });
@@ -309,7 +309,7 @@
 
         function dropdownmenu2(products) {
             var datalist = document.getElementById("browsers1");
-            datalist.innerHTML = ""; // Clear the existing options
+            datalist.innerHTML = "";
 
             // Extract and sort unique receivers
             var uniqueReceivers = Array.from(new Set(products.map(product => product.reciever))).sort();
@@ -511,7 +511,7 @@
                     let filteredProducts = arrivalData.concat(shippingData);
                     let filteredByDate = filterDataByDate(filteredProducts, startDate, endDate);
 
-                    // Сортировка продуктов по дате в обратном порядке
+                    
                     filteredByDate.sort((a, b) => new Date(b.date) - new Date(a.date));
 
                     displayProducts(filteredByDate);
@@ -524,7 +524,7 @@
                     .then(data => {
                         let filteredByDate = filterDataByDate(data, startDate, endDate);
                 
-                        // Сортировка продуктов по дате в обратном порядке
+                        
                         filteredByDate.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                         displayProducts(filteredByDate);

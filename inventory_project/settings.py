@@ -25,11 +25,14 @@ SECRET_KEY = "django-insecure-ovtw@b2ejtn+cobbz3_z5j$3-aw4#tdl!--5dfehvg!f7ep)gm
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['46b9-92-248-185-29.ngrok-free.app', '127.0.0.1', 'localhost']
-CSRF_TRUSTED_ORIGINS = ['https://*.46b9-92-248-185-29.ngrok-free.app', 'https://*.127.0.0.1']
+ALLOWED_HOSTS = ['23db-92-248-185-29.ngrok-free.app', '127.0.0.1', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://*.23db-92-248-185-29.ngrok-free.app', 'https://*.127.0.0.1']
 
 
 # Application definition
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     #CUSTOM_APPS
+    'django_filters',
     "inventory",
     "rest_framework"
 ]

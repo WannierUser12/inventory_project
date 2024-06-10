@@ -12,6 +12,21 @@ class Product(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        ordering = ['-name']
+
+    def get_queryset(self, request):
+        if not request.user.IsNotManager():
+            qs = super(Product, self).get_queryset(request)
+            print(qs)
+            filtered_qs = qs.filter(category = "Резцы")
+            print(filtered_qs)
+            return filtered_qs
+        else:
+            print("qs: ", qs)
+            qs = super(Product, self).get_queryset(request)
+            return qs
+
 
 class product_arrival(models.Model):
     supplier = models.CharField(max_length=100)
