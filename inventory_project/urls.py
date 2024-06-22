@@ -30,6 +30,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.index),
     path("index_arrival/", views.arrival),
+    path("import_products/", views.import_products),
     path("api/", include("inventory.urls"), name="inventory"),
     path('accounts/', include('django.contrib.auth.urls')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

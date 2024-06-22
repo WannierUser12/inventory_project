@@ -8,6 +8,18 @@ class InventorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'quantity', 'description', 'category']
 
 
+class ImportproductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Import_products
+        fields = ['id', 'name', 'description', 'gtd_id', 'date', 'category', 'quantity', "income_quantity"]#'third_id',
+
+
+class ImportproductsShipmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.import_product_shipment
+        fields = ['id', 'reciever', 'date', 'quantity', 'product_id', 'billing_number']
+
+
 class ProductSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.product_arrival

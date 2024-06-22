@@ -25,14 +25,17 @@ SECRET_KEY = "django-insecure-ovtw@b2ejtn+cobbz3_z5j$3-aw4#tdl!--5dfehvg!f7ep)gm
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['23db-92-248-185-29.ngrok-free.app', '127.0.0.1', 'localhost']
-CSRF_TRUSTED_ORIGINS = ['https://*.23db-92-248-185-29.ngrok-free.app', 'https://*.127.0.0.1']
+ALLOWED_HOSTS = ['hip-secure-polecat.ngrok-free.app', '127.0.0.1', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://*.hip-secure-polecat.ngrok-free.app', 'https://*.127.0.0.1']
 
 
 # Application definition
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -55,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'middleware.LoginRequiredMiddleware',  # Добавлено ваше middleware
+    'middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = "inventory_project.urls"
@@ -63,6 +66,7 @@ ROOT_URLCONF = "inventory_project.urls"
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
 
 LOGIN_URL = 'login'  # URL для перенаправления неавторизованных пользователей
 LOGIN_REDIRECT_URL = '/'  # URL для перенаправления после успешного логина

@@ -6,6 +6,8 @@ from . import views
 router = CustomDefaultRouter(base_prefix="inventorys")
 router_ = CustomDefaultRouter(base_prefix="arrival")
 router__ = CustomDefaultRouter(base_prefix="shipping")
+router___ = CustomDefaultRouter(base_prefix="import_products")
+router____ = CustomDefaultRouter(base_prefix="import_products_shipment")
 
 router.register(
     "",
@@ -17,12 +19,24 @@ router.register(
     views.ProductViewSet,
     basename="products",
 )
+
+router___.register(
+    "",
+    views.ImportproductsViewSet,
+    basename="import_products",
+)
+
+router____.register(
+    "",
+    views.ImportproductsShipmentViewSet,
+    basename="import_products_shipment",
+)
+
 router_.register(
     "",
     views.ArrivalMixinView,
     basename="arrival",
 )
-
 router__.register(
     "",
     views.ShippingMixinView,
@@ -33,4 +47,6 @@ urlpatterns = [
     path("", include(router.urls)),
     path("", include(router_.urls)),
     path("", include(router__.urls)),
+    path("", include(router___.urls)),
+    path("", include(router____.urls)),
 ]

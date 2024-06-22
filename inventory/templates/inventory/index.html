@@ -192,7 +192,7 @@
             <button class="logout-btn" onclick="logout()">Выйти</button>
         </div>
 
-        <h1>Склад</h1>
+        <h1>Склад (тестовая версия)</h1>
         <form id="yourForm" onsubmit="event.preventDefault(); submitForm();" method="post">
             {% csrf_token %}
             <!--<label for="browser">Наименование товара:</label>-->
@@ -207,6 +207,7 @@
         </form>
         
         <p><a href="../../index_arrival" class="btn">Список отгрузок и приходов</a></p>
+        <p><a href="../../import_products/" class="btn">Импорт</a></p>
         <select id="categoryFilter" onchange="filterByCategory()">
             <option value="">Все категории</option>
             <!-- Добавьте другие категории по вашему выбору -->
