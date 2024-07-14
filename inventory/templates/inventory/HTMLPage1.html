@@ -1,0 +1,326 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Склад - Проформы</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+</head>
+<body>
+    <div id="notification" class="notification"></div>
+    <div id="notificationfail" class="notificationfail"></div>
+
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Склад</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="../../">Главная <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Меню
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="../../index_arrival">Отгрузки и приходы</a>
+                            <a class="dropdown-item" href="../../import_products/">Импорт</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="../../import_products_managers/">Остаток по импорту</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">Тест</a>
+                    </li>
+                </ul>
+                <span>{{ user.first_name }} </span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+            </div>
+        </nav>
+
+        <div id="uploadNotification" class="alert alert-success d-none" role="alert">
+            Файл успешно загружен!
+        </div>
+
+        <div class="container mt-5">
+            <div class="d-flex flex-row mb-3 align-items-center">
+                <input id="searchInput" type="text" class="form-control w-25 mr-2" placeholder="Поиск по проформе или наименованию">
+                <button id="addProformaBtn" class="btn btn-success mr-2">Добавить проформу</button>
+                <form id="uploadForm" method="post" enctype="multipart/form-data" class="d-flex align-items-center">
+                    {% csrf_token %}
+                    <div class="custom-file mr-2">
+                        <input type="file" name="document" class="custom-file-input" id="customFile">
+                        <label class="custom-file-label" for="customFile">Выберите файл</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Загрузить</button>
+                </form>
+            </div>
+            <div class="accordion" id="accordionExample">
+                <!-- Content -->
+            </div>
+        </div>
+
+        <a class="scroll-to-top rounded" href="#page-top">
+            <i class="fas fa-angle-up"></i>
+        </a>
+
+        <div class="modal fade" id="proformaModal" tabindex="-1" aria-labelledby="proformaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="proformaModalLabel">Добавить/Редактировать проформу</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="proformaForm">
+                            {% csrf_token %}
+                            <input type="hidden" id="proformaId" name="id">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Наименование товара</label>
+                                <input type="text" class="form-control" id="productName" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productSku" class="form-label">Артикул</label>
+                                <input type="text" class="form-control" id="productSku" name="sku">
+                            </div>
+                            <div class="mb-3">
+                                <label for="orderNumber" class="form-label">Номер заказа</label>
+                                <input type="text" class="form-control" id="orderNumber" name="order_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="clientName" class="form-label">Клиент</label>
+                                <input type="text" class="form-control" id="clientName" name="client" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="orderQuantity" class="form-label">Количество заказа</label>
+                                <input type="number" class="form-control" id="orderQuantity" name="order_quantity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="shipmentQuantity" class="form-label">Количество отгрузки</label>
+                                <input type="number" class="form-control" id="shipmentQuantity" name="shipment_quantity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productPrice" class="form-label">Цена товара</label>
+                                <input type="number" step="0.01" class="form-control" id="productPrice" name="price" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="shipment-info" style="display:none; position:absolute; background-color:#fff; border:1px solid #ccc; padding:10px; z-index:1000;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('customFile');
+            const label = fileInput.nextElementSibling;
+            const alertSuccess = document.getElementById('uploadNotification');
+            const csrftoken = getCookie('csrftoken');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const formData = new FormData();
+                formData.append('document', fileInput.files[0]);
+
+                fetch('/upload_proforma/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка HTTP: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        label.textContent = 'Выберите файл';
+                        fileInput.value = '';
+
+                        alertSuccess.classList.remove('d-none');
+                        alertSuccess.textContent = 'Файл успешно загружен!';
+
+                        setTimeout(function () {
+                            alertSuccess.classList.add('d-none');
+                        }, 3000);
+                    } else {
+
+                        console.error('Неправильный формат JSON ответа или ошибка:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при обработке ответа:', error);
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('customFile');
+            const label = fileInput.nextElementSibling;
+
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files.length > 0) {
+                    label.textContent = fileInput.files[0].name;
+                } else {
+                    label.textContent = 'Выберите файл';
+                }
+            });
+        });
+
+        function groupBy(items, key) {
+            return items.reduce((grouped, item) => {
+                const keyValue = item[key];
+                if (!grouped[keyValue]) {
+                    grouped[keyValue] = [];
+                }
+                grouped[keyValue].push(item);
+                return grouped;
+            }, {});
+        }
+
+        function displayProformasAccordion(proformas, groupByKey) {
+            const groupedProformas = groupBy(proformas, groupByKey);
+            const accordion = document.getElementById('accordionExample');
+
+            accordion.innerHTML = '';
+
+            Object.entries(groupedProformas).forEach(([key, group], index) => {
+                const groupID = `heading${index}`;
+                const collapseID = `collapse${index}`;
+
+                const card = document.createElement('div');
+                card.classList.add('card');
+
+                const cardHeader = document.createElement('div');
+                cardHeader.classList.add('card-header');
+                cardHeader.id = groupID;
+                cardHeader.innerHTML = `
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${collapseID}" aria-expanded="true" aria-controls="${collapseID}">
+                            ${key}
+                        </button>
+                    </h5>
+                `;
+
+                const collapseDiv = document.createElement('div');
+                collapseDiv.id = collapseID;
+                collapseDiv.classList.add('collapse');
+                collapseDiv.setAttribute('aria-labelledby', groupID);
+                collapseDiv.setAttribute('data-parent', '#accordionExample');
+
+                const cardBody = document.createElement('div');
+                cardBody.classList.add('card-body');
+
+                group.forEach(proforma => {
+                    const proformaDetails = document.createElement('div');
+                    proformaDetails.classList.add('proforma-details');
+                    proformaDetails.innerHTML = `
+                        <p>Наименование товара: ${proforma.product_name}</p>
+                        <p>Артикул: ${proforma.product_sku}</p>
+                        <p>Номер заказа: ${proforma.order_number}</p>
+                        <p>Клиент: ${proforma.client}</p>
+                        <p>Количество заказа: ${proforma.order_quantity}</p>
+                        <p>Количество отгрузки: ${proforma.shipment_quantity}</p>
+                        <p>Цена товара: ${proforma.price}</p>
+                    `;
+                    cardBody.appendChild(proformaDetails);
+                });
+
+                collapseDiv.appendChild(cardBody);
+                card.appendChild(cardHeader);
+                card.appendChild(collapseDiv);
+                accordion.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const proformas = [
+                // Sample data
+                {
+                    id: 1,
+                    product_name: 'Пример товара 1',
+                    product_sku: 'SKU1',
+                    order_number: '12345',
+                    client: 'Клиент 1',
+                    order_quantity: 10,
+                    shipment_quantity: 5,
+                    price: 100.00
+                },
+                {
+                    id: 2,
+                    product_name: 'Пример товара 2',
+                    product_sku: 'SKU2',
+                    order_number: '67890',
+                    client: 'Клиент 2',
+                    order_quantity: 20,
+                    shipment_quantity: 15,
+                    price: 200.00
+                }
+            ];
+
+            displayProformasAccordion(proformas, 'client');
+
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.toLowerCase();
+                const filteredProformas = proformas.filter(proforma =>
+                    proforma.product_name.toLowerCase().includes(query) ||
+                    proforma.client.toLowerCase().includes(query) ||
+                    proforma.order_number.includes(query)
+                );
+                displayProformasAccordion(filteredProformas, 'client');
+            });
+        });
+
+        function logout() {
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => console.error('Ошибка при выходе:', error));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl3Qa2gEGUpX06CFTUu6rGJcd4j7R04HBnqf9xQB3h0LiFJOZmhr9N1Sw9+" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+YQ4rxmiM0xI45yAFJTd6saQlm2m9E3LgRdxjF0eC6Ckp4CSLlg56y9mZ4LLKw5d" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-B0UglyR+u7B1cb8JfFLt3LgVqe2pjsNE6fwl02Hg8hBCMAsFj98KLVg5IhduO/D3" crossorigin="anonymous"></script>
+
+
+</body>
+</html>

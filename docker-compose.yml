@@ -1,0 +1,43 @@
+version: '3.11'
+
+services:
+  db:
+    image: postgres:16
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "54321:5432"
+
+  web:
+    build: .
+    command: /app/entrypoint.sh
+    # Убери volume монтирование
+    # volumes:
+    #   - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DEBUG: '1'
+      DJANGO_SETTINGS_MODULE: 'inventory_project.settings'
+      DATABASE_URL: 'postgres://admin:admin@db:5432/inventory'
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    ports:
+      - 4040:4040
+
+volumes:
+  data:
