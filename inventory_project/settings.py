@@ -15,7 +15,8 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -25,8 +26,8 @@ SECRET_KEY = "django-insecure-ovtw@b2ejtn+cobbz3_z5j$3-aw4#tdl!--5dfehvg!f7ep)gm
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['hip-secure-polecat.ngrok-free.app', '127.0.0.1', 'localhost']
-CSRF_TRUSTED_ORIGINS = ['https://*.hip-secure-polecat.ngrok-free.app', 'https://*.127.0.0.1']
+ALLOWED_HOSTS = ['guiding-tortoise-solely.ngrok-free.app', '127.0.0.1', 'localhost', '0.0.0.0'] # ngrok http --domain=guiding-tortoise-solely.ngrok-free.app 8000 hip-secure-polecat.ngrok-free.app
+CSRF_TRUSTED_ORIGINS = ['https://*.guiding-tortoise-solely.ngrok-free.app', 'https://*.127.0.0.1', 'https://*.0.0.0.0']
 
 
 # Application definition
@@ -47,7 +48,9 @@ INSTALLED_APPS = [
     #CUSTOM_APPS
     'django_filters',
     "inventory",
-    "rest_framework"
+    "rest_framework",
+    "django.contrib.postgres"
+
 ]
 
 MIDDLEWARE = [
@@ -97,13 +100,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'inventory',
-        'USER': 'postgres',
-        'PASSWORD': '0210',
-        'HOST': 'localhost',
+        'USER': 'admin',
+        'PASSWORD': 'admin',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

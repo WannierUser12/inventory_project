@@ -25,14 +25,18 @@ from django.contrib.auth import views as auth_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
-urlpatterns = [
+urlpatterns = ([
 
     path("admin/", admin.site.urls),
     path("", views.index),
     path("index_arrival/", views.arrival),
-    path("import_products/", views.import_products),
+    path("import_products/", views.import_products, name='import_products'),
+    path("import_products_managers/", views.import_products_managers, name='import_products_managers'),
+    path("proforms/", views.proforms, name='proforms'),
     path("api/", include("inventory.urls"), name="inventory"),
     path('accounts/', include('django.contrib.auth.urls')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('upload_file/', views.upload_file, name='upload_file'),
 
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+               + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))

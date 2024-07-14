@@ -1,24 +1,18 @@
-from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.contrib import messages
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required, permission_required
-import json
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
+import pandas as pd
+from .utils import XLSXSave
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, generics, mixins
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsNotManager
 from rest_framework.permissions import IsAuthenticated, BasePermission
-from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.test import APIRequestFactory
 from core.shortcuts import get_object_or_404
+from django.shortcuts import render, redirect
+from .forms import DocumentForm
 from inventory.models import (Product,
                               product_arrival,
                               product_shipment,
@@ -37,10 +31,10 @@ class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = InventorySerializer
     http_method_names = ['get', 'post', 'put']
-
+    filter_backends = [DjangoFilterBackend]
     def list(self, request, *args, **kwargs):
         if request.user.groups.filter(name='managers').exists():
-            filter_backends = [DjangoFilterBackend]
+
             filterset_fields = ["Резцы", "Резцедержатели", "Ножи", "Базы", "Болты", "Техпластины", "Прочее"]
             queryset = self.filter_queryset(self.get_queryset()).filter(category__in = filterset_fields)
         else:
@@ -73,7 +67,7 @@ class InventoryViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            print("POSTED HERE")
+            # print("POSTED HERE")
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -88,17 +82,18 @@ class ImportproductsViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         if not request.user.groups.filter(name='managers').exists():
             queryset = self.filter_queryset(self.get_queryset()).filter()
+        else:
+            queryset = self.filter_queryset(self.get_queryset()).filter()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        #print(serializer.data)
+        # print(serializer.data)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        print("Headers:", request.headers)
         return super().destroy(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
@@ -112,10 +107,8 @@ class ImportproductsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
         if not IsNotManager().has_permission(request, self):
             return Response({"detail": "Permission denied0."}, status=status.HTTP_403_FORBIDDEN)
-        #print(request.data)
         return super().create(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'], url_path='shipments_by_description/(?P<product_id>[^/.]+)')
@@ -131,13 +124,48 @@ class ImportproductsViewSet(viewsets.ModelViewSet):
         # if not IsNotManager().has_permission(request, self):
         #     return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
-        print(serializer)
         if serializer.is_valid():
-            print("POSTED HERE")
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES, user=request.user)
+        if form.is_valid():
+            form.save()
+            uploaded_file = request.FILES['document']
+            data = pd.read_excel(uploaded_file)
+            try:
+                XLSXSave.save_data_with_user(data, request.user)
+                # print('data_exported into db')
+                return JsonResponse({'success': True})
+            except Exception as e:
+                return JsonResponse({'success': False, 'errors': str(e)})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+
+
+
+class ImportproductsManagerViewSet(viewsets.ModelViewSet):
+    queryset = Import_products.objects.all()
+    serializer_class = ImportproductsSerializer
+    http_method_names = ['get', 'post', 'put', 'delete']
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name='managers').exists():
+            queryset = self.filter_queryset(self.get_queryset()).filter()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ImportproductsShipmentViewSet(viewsets.ModelViewSet):
@@ -145,13 +173,16 @@ class ImportproductsShipmentViewSet(viewsets.ModelViewSet):
     serializer_class = ImportproductsShipmentSerializer
     http_method_names = ['get', 'post', 'put', 'delete']
 
-
     def create(self, request, *args, **kwargs):
         product_id = request.data.get('product_id')
-        # try:
-        #     product = Import_products.objects.get(id=product_id)
-        # except Import_products.DoesNotExist:
-        #     return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            product = Import_products.objects.get(id=product_id)
+        except Import_products.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        new_quantity = product.quantity - int(request.data.get('quantity'))
+        product.quantity = new_quantity
+        product.save()
 
         shipment = import_product_shipment.objects.create(
             product_id=request.data.get('product_id'),
@@ -162,7 +193,6 @@ class ImportproductsShipmentViewSet(viewsets.ModelViewSet):
         )
         return Response({"detail": "Shipment created successfully."}, status=status.HTTP_201_CREATED)
 
-#(reciever, parsed_date[1], quantity, row[1], product_id)
     @action(detail=False, methods=['get'], url_path='(?P<product_id>[^/.]+)')
     def get_shipments_by_description(self, request, product_id=None):
         if not product_id:
@@ -190,11 +220,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ArrivalMixinView(viewsets.GenericViewSet,
                        generics.ListCreateAPIView,
                        mixins.RetrieveModelMixin):
+
     queryset = product_arrival.objects.all()
     serializer_class = ProductSerializer
 
     def get(self, request, *args, **kwargs):
-        print(args, kwargs)
         return self.list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
@@ -235,18 +265,15 @@ class ArrivalMixinView(viewsets.GenericViewSet,
     def filter_by_dates(self, request):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
-        print(start_date, end_date)
         if start_date:
             try:
-                print("request_data", request.data)
                 if start_date and end_date:
                     start_date = datetime.strptime(start_date, '%Y-%m-%d')
                     end_date = datetime.strptime(end_date, '%Y-%m-%d')
                     user = request.user
-                    user_groups = user.groups.values_list('name', flat=True)
+                    user_groups = user.groups.values_list('name', flat=True)  # TODO
                     queryset = self.queryset.filter(date__range=[start_date, end_date])
                     serializer = self.serializer_class(queryset, many=True)
-                    print(serializer.data)
                     if serializer.data:
                         return Response(serializer.data)
                     else:
@@ -262,7 +289,6 @@ class ShippingMixinView(viewsets.GenericViewSet,
                         mixins.RetrieveModelMixin):
     queryset = product_shipment.objects.all()
     serializer_class = ProductShipment
-    print(queryset)
 
     def get(self, request, *args, **kwargs):
         print(args, kwargs)
@@ -282,12 +308,12 @@ class ShippingMixinView(viewsets.GenericViewSet,
         if product_name and product_quantity:
             try:
                 product_quantity = int(product_quantity)
-                print('minus ', product_quantity)
+                # print('minus ', product_quantity)
                 product = Product.objects.filter(name=product_name).first()
                 if product:
                     product.quantity -= product_quantity
-                    print(product.quantity)
-                    print(product)
+                    # print(product.quantity)
+                    # print(product)
                     product.save()
                     return Response({"ok": "Invalid quantity value"}, status=status.HTTP_200_OK)
             except ValueError:
@@ -299,10 +325,24 @@ def arrival(request):
     return render(request, 'inventory/index_arrival.html', {'user_is_manager': user_is_manager})
 
 
+def proforms(request):
+    user_is_manager = request.user.groups.filter(name='managers').exists()
+    return render(request, 'inventory/HTMLPage1.html', {'user_is_manager': user_is_manager})
+
+
 def import_products(request):
     user_is_manager = request.user.groups.filter(name='managers').exists()
+    if user_is_manager:
+        return render(request, 'inventory/import_products_managers.html', {'user_is_manager': user_is_manager})
+
+    else:
+        return render(request, 'inventory/import_products.html', {'user_is_manager': user_is_manager})
+
+
+def import_products_managers(request):
+    user_is_manager = request.user.groups.filter(name='managers').exists()
     return (
-        render(request, 'inventory/import_products.html', {'user_is_manager': user_is_manager}))
+        render(request, 'inventory/import_products_managers.html', {'user_is_manager': user_is_manager}))
 
 
 def index(request):
@@ -315,21 +355,3 @@ def product_detail(request, product_id):
     return render(request, 'inventory/product_detail.html', {'product': product})
 
 
-"""def add_product(request):
-    if request.method == 'POST':
-        try:
-            patient_name = request.POST.get('browser')
-            blood_group = request.POST.get('lname')
-
-            patient = product_arrival(name=patient_name, quantity=blood_group, supplier ="АВТОДОРГИ", date="2024-05-06")
-            patient.save()
-            x = Product.objects.filter(name=patient_name)
-            c = x.values()[0]['quantity'] + int(blood_group)
-            x.update(quantity=c)
-
-            messages.success(request, 'Товар успешно добавлен')
-        except:
-            messages.error(request, 'Товар не найден')
-        return HttpResponse(status=204)
-    else:
-        return HttpResponse(status=204)"""

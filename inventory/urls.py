@@ -8,6 +8,7 @@ router_ = CustomDefaultRouter(base_prefix="arrival")
 router__ = CustomDefaultRouter(base_prefix="shipping")
 router___ = CustomDefaultRouter(base_prefix="import_products")
 router____ = CustomDefaultRouter(base_prefix="import_products_shipment")
+router_____ = CustomDefaultRouter(base_prefix="import_products_managers")
 
 router.register(
     "",
@@ -24,6 +25,12 @@ router___.register(
     "",
     views.ImportproductsViewSet,
     basename="import_products",
+)
+
+router_____.register(
+    "",
+    views.ImportproductsViewSet,
+    basename="import_products_managers",
 )
 
 router____.register(
@@ -49,4 +56,5 @@ urlpatterns = [
     path("", include(router__.urls)),
     path("", include(router___.urls)),
     path("", include(router____.urls)),
+    path("", include(router_____.urls)),
 ]

@@ -15,8 +15,8 @@
         }
 
         .container {
-            max-width: 800px;
-            margin: 20px auto;
+            max-width: 1600px !important;
+            margin: 10px auto;
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
@@ -30,6 +30,12 @@
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
+        }
+
+        .table .name-column {
+            max-width: 150px;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
         .datalist {
@@ -166,14 +172,20 @@
             gap: 10px;
         }
 
-            .form-group input {
-                flex: 1;
-            }
+        .form-group input {
+            flex: 1;
+        }
 
-                .form-group input:last-child {
-                    margin-right: 0;
-                }
+        .form-group input:last-child {
+            margin-right: 0;
+        }
+
+        span {
+            margin-right: 20px;
+            font-weight: bold;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
 </head>
 
 
@@ -182,7 +194,46 @@
     <div id="notification" class="notification"></div>
     <div id="notificationfail" class="notificationfail"></div>
     <div class="container">
-        <h1>Склад (тестовая версия)</h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Склад</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <button id="backButton" class="btn btn-secondary">Назад</button>
+                    </li>
+
+                    <li class="nav-item active">
+                        <a class="nav-link" href="../../">Главная <span class="sr-only">(current)</span></a>
+                    </li>
+                    <!--
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>-->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Меню
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="../../index_arrival">Отгрузки и приходы</a>
+                            <a class="dropdown-item" href="../../import_products/">Импорт</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="../../import_products_managers/">Остаток по импорту</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#"></a>
+                    </li>
+                </ul>
+                <span>{{ user.first_name }} </span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+
+            </div>
+        </nav>
 
         <h2 id="adding_product_header">Добавление товара</h2>
         <form id="yourForm" onsubmit="event.preventDefault(); submitForm();" method="post">
@@ -221,21 +272,28 @@
 
         <select id="categoryFilter" onchange="Change_cat()">
             <option value="Все">Все</option>
-            <option value="Отгрузка">Отгрузка</option>
+            <option id ="out"value="Отгрузка">Отгрузка</option>
             <option value="Приход">Приход</option>
         </select>
 
-        <table id="inventoryTable">
-            <thead>
-                <tr>
-                    <th>Наименование</th>
-                    <th>Поставщик</th>
-                    <th>Количество</th>
-                    <th>Дата</th>
-                </tr>
-            </thead>
-            <tbody id="inventoryBody"></tbody>
-        </table>
+        <div class="container mt-5">
+            <div class="d-flex flex-row mb-3 align-items-center">
+                <select id="groupBy" class="form-control w-25 mr-2">
+                    <option value="reciever">Группировать по отгрузкам</option>
+                    <option value="supplier">Группировать по приходам</option>
+                </select>
+                <input id="searchInput" type="text" class="form-control w-25 mr-2" placeholder="Поиск по получателю или наименованию">
+            </div>
+            <div class="horizontal-scroll">
+                <div class="accordion" id="accordionExample">
+                    <!-- Content -->
+                </div>
+            </div>
+            <a class="scroll-to-top rounded" href="#page-top">
+                <i class="fas fa-angle-up"></i>
+            </a>
+        </div>
+
 
         <div class="date-filter" id="date_filter">
             <label for="start_date">Начальная дата:</label>
@@ -247,8 +305,15 @@
             <button onclick="loadProductsByDates(start_date, end_date)">Показать товары</button>
         </div>
 
-    </div>
+        
 
+
+
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var form = document.getElementById('yourForm');
@@ -256,13 +321,19 @@
             var header = document.getElementById('adding_product_header');
             var header2 = document.getElementById('shipping_product_header');
             var userIsManager = {{ user_is_manager|yesno:"true,false" }};
+        var filter = document.getElementById('categoryFilter');
+
             
-        
+        document.getElementById('backButton').addEventListener('click', function () {
+            history.back();
+        });
         if (userIsManager) {
             header.style.display = 'none';
             header2.style.display = 'none';
             form.style.display = 'none';
             form2.style.display = 'none';
+
+
         } else {
             header.style.display = 'block';
             header2.style.display = 'block';
@@ -274,15 +345,98 @@
 
         
         window.onload = function () {
-            document.getElementById("categoryFilter").value = "Все";
             Change_cat();
-            loadProducts22()
-
+            loadProducts22();
         };
 
-        function onlyUnique(value, index, array) {
-            return array.indexOf(value) === index;
+
+        function groupByTwoKeys(array, key1, key2) {
+            return array.reduce((result, currentValue) => {
+                const combinedKey = `${currentValue[key1]}_${currentValue[key2]}`;
+                if (!result[combinedKey]) {
+                    result[combinedKey] = [];
+                }
+                result[combinedKey].push(currentValue);
+                return result;
+            }, {});
         }
+
+
+        function displayProductsAccordion(products, displayType) {
+            const key1 = displayType;
+            const key2 = 'date';
+            const groupedProducts = groupByTwoKeys(products, key1, key2);
+            const sortedKeys = Object.keys(groupedProducts).sort((a, b) => {
+                const dateA = new Date(a.split('_')[1]);
+                const dateB = new Date(b.split('_')[1]);
+                return dateB - dateA; // Сортировка от новых к старым
+            });
+
+            const accordion = document.getElementById("accordionExample");
+            accordion.innerHTML = ""; // Очистить предыдущий контент
+            sortedKeys.forEach((keyValue, index) => {
+                const products = groupedProducts[keyValue];
+                const collapseId = `collapse${index}`;
+                const headingId = `heading${index}`;
+                const [entity, date] = keyValue.split('_');
+
+                const cardHeader = `
+            <div class="card">
+                <div class="card-header" id="${headingId}">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left ${index === 0 ? '' : 'collapsed'}" type="button" data-toggle="collapse" data-target="#${collapseId}" aria-expanded="${index === 0}" aria-controls="${collapseId}">
+                            ${entity} (${date})
+                        </button>
+                    </h2>
+                </div>
+                <div id="${collapseId}" class="collapse ${index === 0 ? 'show' : ''}" aria-labelledby="${headingId}">
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="name_column">Наименование</th>
+                                    <th>${key1 === 'supplier' ? 'Поставщик' : 'Получатель'}</th>
+                                    <th>Дата</th>
+                                    <th>Количество</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.map(product => `
+                                    <tr>
+                                        <td class="name-column">${product.name}</td>
+                                        <td>${key1 === 'reciever' ? product.reciever : product.supplier}</td>
+                                        <td>${product.date}</td>
+                                        <td>${product.quantity}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            `;
+                    accordion.innerHTML += cardHeader;
+                });
+            }
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.getElementById('searchInput').addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                const filteredProducts = products.filter(product => 
+                    product.date.toString().includes(searchTerm) || 
+                    product.name.toLowerCase().includes(searchTerm) || 
+                    document.getElementById('groupBy').value === "reciever" ? product.reciever.toLowerCase().includes(searchTerm) : product.supplier.toLowerCase().includes(searchTerm))
+                displayProductsAccordion(filteredProducts, document.getElementById('groupBy').value);
+            });
+
+            function onlyUnique(value, index, array) {
+                return array.indexOf(value) === index;
+            }
+        });
+
+        document.getElementById('groupBy').addEventListener('change', function () {
+            Change_cat();
+        });
 
         function dropdownmenu(products) {
             var datalist = document.getElementById("browsers");
@@ -306,6 +460,7 @@
                 datalist.appendChild(messageOption);
             }
         }
+
 
         function dropdownmenu2(products) {
             var datalist = document.getElementById("browsers1");
@@ -348,18 +503,21 @@
             }
         }
 
+
         function loadProducts22() {
             fetch('/api/inventorys/')
                 .then(response => response.json())
                 .then(data => {
-                    let products = data;
                     console.log("load_products: ", data);
                     dropdownmenu3(products);
 
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
+
         }
-       
+        
+
+
         function loadProductsByDates(start_date, end_date) {
             var startDate = document.getElementById("start_date").value;
             var endDate = document.getElementById("end_date").value;
@@ -374,6 +532,7 @@
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
         }
+
 
         function myFunction() {
             var input, filter, table, tr, td, i, txtValue;
@@ -394,6 +553,7 @@
             }
         }
 
+
         function loadProducts() {
             fetch('/api/arrival/')
                 .then(response => response.json())
@@ -406,10 +566,10 @@
                 .then(data => {
                     let products = data;
                     dropdownmenu(data);
-
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
         }
+
 
         function displayProducts(products) {
             var tableBody = document.getElementById("inventoryBody");
@@ -446,6 +606,7 @@
             }
         }
 
+
         function submitForm() {
             var form = document.getElementById("yourForm");
             var formData = new FormData(form);
@@ -468,6 +629,7 @@
                 })
                 .catch(error => console.error("Ошибка:", error));
         }
+
 
         function submitFormShipping() {
             var form = document.getElementById("yourFormShipping");
@@ -493,61 +655,33 @@
                 .catch(error => console.error("Ошибка:", error));
         }
 
+
         function Change_cat() {
-            var selectedCategory = document.getElementById("categoryFilter").value;
-            var startDate = document.getElementById("start_date").value;
-            var endDate = document.getElementById("end_date").value;
+            //var selectedCategory = document.getElementById("categoryFilter").value;
+            var selectedFilter = document.getElementById("groupBy").value;
+            console.log("selectedFilter", selectedFilter);
+            
+            //var startDate = document.getElementById("start_date").value;
+            //var endDate = document.getElementById("end_date").value;
 
-            if (selectedCategory === "Все") {
-                Promise.all([
-                    fetch('/api/arrival/').then(response => response.json()),
-                    fetch('/api/shipping/').then(response => response.json())
-                ])
-                .then(([arrivalData, shippingData]) => {
-                    arrivalData.forEach(product => {
-                        product.reciever = product.supplier || "";
-                    });
-                    console.log(shippingData);
-                    let filteredProducts = arrivalData.concat(shippingData);
-                    let filteredByDate = filterDataByDate(filteredProducts, startDate, endDate);
+    
+            var endpoint = selectedFilter === "reciever" ? "/api/shipping/" : "/api/arrival/";
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("data", data);
+                    products = data;
+                    displayProductsAccordion(data, selectedFilter);
+                    //let filteredByDate = filterDataByDate(data, startDate, endDate);
 
-                    
-                    filteredByDate.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                    displayProducts(filteredByDate);
+                    //filteredByDate.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                    //displayProducts(filteredByDate);
                 })
                 .catch(error => console.error('Ошибка при загрузке данных:', error));
-            } else {
-                var endpoint = selectedCategory === "Отгрузка" ? "/api/shipping/" : "/api/arrival/";
-                fetch(endpoint)
-                    .then(response => response.json())
-                    .then(data => {
-                        let filteredByDate = filterDataByDate(data, startDate, endDate);
-                
-                        
-                        filteredByDate.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                        displayProducts(filteredByDate);
-                    })
-                    .catch(error => console.error('Ошибка при загрузке данных:', error));
-            }
         }
 
-        function filterDataByDate(data, startDate, endDate) {
-            return data.filter(product => {
-                let productDate = new Date(product.date);
-                let start = startDate ? new Date(startDate) : null;
-                let end = endDate ? new Date(endDate) : null;
-                if (start && end) {
-                    return productDate >= start && productDate <= end;
-                } else if (start) {
-                    return productDate >= start;
-                } else if (end) {
-                    return productDate <= end;
-                }
-                return true;
-            });
-        }
+
 
         function showNotification(message) {
             var notification = document.getElementById("notification");
@@ -558,6 +692,7 @@
             }, 3000);
         }
 
+
         function showNotificationfail(message) {
             var notificationfail = document.getElementById("notificationfail");
             notificationfail.innerHTML = message;
@@ -566,6 +701,26 @@
                 notificationfail.classList.remove("show");
             }, 3000);
         }
+
+
+        function logout() {
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login/';
+                } else {
+                    showNotificationfail("Ошибка при выходе из системы");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+
     </script>
 </body>
 

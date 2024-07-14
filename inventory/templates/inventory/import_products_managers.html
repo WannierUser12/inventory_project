@@ -1,0 +1,590 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Склад</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f3f3;
+        }
+
+        .container {
+            max-width: 1600px !important;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+       .accordion {
+
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input-field {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            width: 150px;
+        }
+
+        .datalist {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 1;
+            max-height: 5px;
+        }
+       .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+        }
+        .notificationfail {
+            transition: opacity 5s ease-in-out;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff0000;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            display: block;
+        }
+        .notificationfail.show {
+            display: block;
+        }
+
+
+        .input-field:focus + .datalist {
+            display: block;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+        .order_item {
+          display: None;
+        }
+        .btn, .logout-btn {
+            padding: 8px 15px;
+            background-color: #4caf50;
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table .thead-light th {
+            background-color: #e9ecef;
+        }
+        .collapse-table {
+            padding: 0;
+        }
+        .collapse-table > div {
+            padding: 0.75rem;
+            background-color: #f9f9f9;
+        }
+        .shipment-details {
+            background-color: #f8f9fa;
+        }
+
+        .btn:hover, .logout-btn:hover {
+            background-color: #45a049;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        button {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #clockButton {
+            top:50px;
+            left:435px;
+            position: relative; 
+            background-color: rgba(69, 160, 73, 0.84);
+            color: #fff;
+            padding: 6px;
+            cursor: pointer;
+        }
+
+        select {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+
+        th {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+        
+        .search {
+            margin-bottom: 20px;
+        }
+        .user-info {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        span {
+            margin-right: 20px;
+            font-weight: bold;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="notification" class="notification"></div>
+    <div id="notificationfail" class="notificationfail"></div>
+    <div class="container">
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Склад</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <button id="backButton" class="btn btn-secondary">Назад</button>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="../../">Главная <span class="sr-only">(current)</span></a>
+                    </li>
+                    <!--
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>-->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Меню
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="../../index_arrival">Отгрузки и приходы</a>
+                            <a class="dropdown-item" href="../../import_products/">Импорт</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="../../import_products_managers/">Остаток по импорту</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#"></a>
+                    </li>
+                </ul>
+
+                <span>{{ user.first_name }} </span>
+                <button class="logout-btn" onclick="logout()">Выйти</button>
+
+            </div>
+        </nav>
+        
+        
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between mb-3">
+                <input id="searchInput" type="text" class="form-control w-50" placeholder="Поиск по наименованию или артикулу">
+            </div>
+            <div class="accordion" id="accordionExample">
+                <!-- Content -->
+            </div>
+        </div>
+
+        <a class="scroll-to-top rounded" href="#page-top">
+            <i class="fas fa-angle-up"></i>
+        </a>
+
+     
+
+
+        <!--<table class="order-count">
+            <tr class="order">
+                <td>
+                    10511010<span class="plus">+</span>
+                </td>
+            </tr>
+            <tr class="order_item">
+                <td>Наименование 1</td>
+            </tr>
+            <tr class="order_item">
+                <td>Наименование 2</td>
+            </tr>
+            <tr class="order">
+                <td>
+                    10005030<span class="plus">+</span>
+                </td>
+            </tr>
+            <tr class="order_item">
+                <td>Наименование 1</td>
+            </tr>
+        </table>
+
+        <table id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Номер запчасти</th>
+                    <th>Номер ГТД</th>
+                    <th>Дата</th>
+                    <th>3 номер</th>
+                    <th>Категория</th>
+                    <th>Количество</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryBody">
+            </tbody>
+        </table>-->
+        <div id="shipment-info" style="display:none; position:absolute; background-color:#fff; border:1px solid #ccc; padding:10px; z-index:1000;"></div>
+    </div>
+    
+    <script>
+
+        var flag = 1;
+        const categoryOrder = ["zapchasti"];
+
+        document.getElementById('backButton').addEventListener('click', function () {
+            history.back();
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+   
+            function loadCategories() {
+                fetch('/api/import_products_managers/')
+                    .then(response => response.json())
+                    .then(data => {
+                        const categories = data.map(product => product.category);
+                        const uniqueCategories = [...new Set(categories)];
+                        const datalist = document.getElementById("categoryList");
+
+                        datalist.innerHTML = '';
+
+                        uniqueCategories.forEach(category => {
+                            const option = document.createElement("option");
+                            option.value = category;
+                            datalist.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching categories:', error);
+                        const datalist = document.getElementById("categoryList");
+                        const option = document.createElement("option");
+                        option.value = "Ошибка загрузки категорий";
+                        datalist.appendChild(option);
+                    });
+            }
+
+            $('#productModal').on('show.bs.modal', function (e) {
+                loadCategories();
+            });
+        });
+
+
+
+
+
+        function dropdownmenu(products) {
+            var datalist = document.getElementById("productCategory");
+            datalist.innerHTML = ""; // Clear previous options
+
+            if (Array.isArray(products) && products.length > 0) {
+                products.forEach(function (product) {
+                    var option = document.createElement("option");
+                    option.value = product.category;
+                    datalist.appendChild(option);
+                });
+            } else {
+                var messageOption = document.createElement("option");
+                messageOption.text = "Данные о товарах не найдены";
+                datalist.appendChild(messageOption);
+            }
+        }
+
+
+        function groupBy(products, key) {
+            return products.reduce((grouped, product) => {
+                const keyValue = product[key];
+                if (!grouped[keyValue]) {
+                    grouped[keyValue] = [];
+                }
+                grouped[keyValue].push(product);
+                return grouped;
+            }, {});
+        }
+
+        function displayProductsAccordion(products, groupByKey) {
+            const groupedProducts = groupBy(products, groupByKey);
+            const accordion = document.getElementById("accordionExample");
+            accordion.innerHTML = ""; // Clear previous content
+
+            Object.keys(groupedProducts).forEach((keyValue, index) => {
+                const products = groupedProducts[keyValue];
+                const collapseId = `collapse${index}`;
+                const headingId = `heading${index}`;
+
+                // Сгруппируем продукты по номеру запчасти, а если его нет - по названию
+                const summarizedProducts = products.reduce((acc, product) => {
+                    const existingProduct = acc.find(p => 
+                        (p.description && p.description === product.description) || 
+                        (!p.description && p.name === product.name)
+                    );
+                    if (existingProduct) {
+                        existingProduct.quantity += product.quantity;
+                    } else {
+                        acc.push({...product}); // Используем копию продукта, чтобы избежать изменения исходных данных
+                    }
+                    return acc;
+                }, []);
+
+                const cardHeader = `
+            <div class="card">
+                <div class="card-header" id="${headingId}">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left ${index === 0 ? '' : 'collapsed'}" type="button" data-toggle="collapse" data-target="#${collapseId}" aria-expanded="${index === 0}" aria-controls="${collapseId}">
+                            ${groupByKey === 'category' ? '' : ''}${keyValue}
+                        </button>
+                    </h2>
+                </div>
+                <div id="${collapseId}" class="collapse ${index === 0 ? 'show' : ''}" aria-labelledby="${headingId}">
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Наименование</th>
+                                    <th>Номер запчасти</th>
+                                    <th>Категория</th>
+                                    <th>Количество</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${summarizedProducts.filter(x => x.quantity > 0).map(product => `
+                                    <tr>
+                                        <td>${product.name}</td>
+                                        <td>${product.description}</td>
+                                        <td>${product.category}</td>
+                                        <td>${product.quantity}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+                accordion.innerHTML += cardHeader;
+            });
+        }
+
+        // Пример функции groupBy
+        function groupBy(array, key) {
+            return array.reduce((result, currentValue) => {
+                (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+                return result;
+            }, {});
+        }
+
+
+
+
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            //console.log("Cookie Value:", cookieValue);  // Логирование значения cookie
+            return cookieValue;
+        }
+
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const filteredProducts = products.filter(product =>  
+                product.name.toLowerCase().includes(searchTerm) ||
+                product.description.toLowerCase().includes(searchTerm
+                ));
+            displayProductsAccordion(filteredProducts,'category');
+        });
+        
+
+      
+        function loadProducts() {
+            fetch('/api/import_products_managers/')
+                .then(response => response.json())
+                .then(data => {
+                    products = data; // Сохраняем данные в переменной products
+                    console.log(data);
+                    //loadCategories(data
+                    displayProductsAccordion(data, 'category');
+                    dropdownmenu(data);
+                    //displayProducts(data, flag);
+                    // Отображаем полученные данные
+                })
+                .catch(error => console.error('Ошибка при загрузке данных:', error));
+        }
+
+
+
+        function displayProducts(products, flag) {
+            var tableBody = document.getElementById("inventoryBody");
+            var selectedCategory = document.getElementById("categoryFilter").value;
+            tableBody.innerHTML = "";
+            //console.log(products);
+
+            if (selectedCategory === "") {
+                // Сортировка по категориям, затем по имени
+                products.sort((a, b) => {
+                    let categoryComparison = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+                    if (categoryComparison === 0) {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return categoryComparison;
+                });
+            } else {
+                products.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            //console.log(products);
+            if (Array.isArray(products) && products.length > 0) {
+                products.forEach(function (product) {
+                    if (product.quantity > 0) {
+                        var row = "<tr>" +
+                            "<td>" + product.name + "</td>" +
+                            "<td>" + product.description + "</td>" +
+                            "<td>" + product.gtd_id + "</td>" +
+                            "<td>" + product.date + "</td>" +
+                            "<td>" + product.category + "</td>" +
+                            "<td>" + product.income_quantity + "</td>" +
+                            "<td>" + product.quantity + "</td>" +
+                            "</tr>";
+                        tableBody.innerHTML += row;
+                    }
+                });
+
+            } else {
+                var messageRow = "<tr><td colspan='4'>Данные о товарах не найдены</td></tr>";
+                tableBody.innerHTML = messageRow;
+            }
+        }
+
+       
+
+
+        function showNotification(message) {
+            var notification = document.getElementById("notification");
+            notification.innerHTML = message;
+            notification.classList.add("show");
+            setTimeout(function () {
+                notification.classList.remove("show");
+            }, 3000); // Скрыть уведомление через 3 секунды (или другой необходимый интервал)
+        }
+
+        function showNotificationfail(message) {
+            var notificationfail = document.getElementById("notificationfail");
+            notificationfail.innerHTML = message;
+            notificationfail.classList.add("show");
+            setTimeout(function () {
+                notificationfail.classList.remove("show");
+            }, 3000); // Скрыть уведомление через 3 секунды (или другой необходимый интервал)
+        }
+
+        function logout() {
+            fetch('/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login/';
+                } else {
+                    showNotificationfail("Ошибка при выходе из системы");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+
+        loadProducts();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+</body>
+</html>
